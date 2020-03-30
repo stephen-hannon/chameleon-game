@@ -1,0 +1,16 @@
+{
+  "name": "chameleon",
+  "version": "0.1.0",
+  "description": "Chameleon game client and server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}
