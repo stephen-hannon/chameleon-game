@@ -3,7 +3,7 @@ const http = require('http');
 const path = require('path');
 const socketIO = require('socket.io');
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const COLUMNS = 'ABCD';
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min)) + min;
 
