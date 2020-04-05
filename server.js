@@ -3,10 +3,23 @@ const http = require('http');
 const path = require('path');
 const socketIO = require('socket.io');
 
+// CONSTANTS AND FUNCTIONS //
 const PORT = process.env.PORT || 5000;
 const COLUMNS = 'ABCD';
+
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min)) + min;
 
+const randomString = (length = 6, base = 36) => Array(length).fill().map(() => randomInt(0, base).toString(base)).join('');
+
+const emitNumClients = (roomId) => {
+	io.to(`room-${roomId}`).clients((error, clients) => {
+		if (error) throw error;
+
+		io.to(`room-${roomId}`).emit('number of players', clients.length);
+	});
+}
+
+// START SERVER //
 const app = express();
 const server = http.Server(app);
 const io = socketIO(server);
@@ -22,22 +35,44 @@ server.listen(PORT, () => {
 	console.log(`Starting server on port ${PORT}`);
 });
 
-const emitNumClients = () => {
-	io.clients((error, clients) => {
-		if (error) throw error;
-
-		io.sockets.emit('number of players', clients.length);
-	});
-}
+const rooms = new Set();
 
 io.on('connection', socket => {
 	console.log(`Client ${socket.id} connected`);
-	emitNumClients();
 
-	socket.on('new round', () => {
-		console.log(`Starting round`);
+	socket.on('new room', () => {
+		const roomId = randomString();
+		console.log('Created new room', roomId);
+		rooms.add(roomId);
+		socket.join(`room-${roomId}`);
+		socket.emit('room id', roomId);
+		emitNumClients(roomId);
+	});
 
-		io.clients((error, clients) => {
+	socket.on('join room', ({ roomId }) => {
+		roomId = roomId.trim();
+		if (!rooms.has(roomId)) {
+			console.error(`Room ${roomId} does not exist`);
+			return;
+		}
+
+		console.log('Joined room', roomId);
+		socket.join(`room-${roomId}`);
+		socket.emit('room id', roomId);
+		emitNumClients(roomId);
+	});
+
+	socket.on('leave room', ({ roomId }) => {
+		console.log('Left room room', roomId);
+		socket.leave(`room-${roomId}`)
+		emitNumClients(roomId);
+	});
+
+	socket.on('new round', ({ roomId }) => {
+		console.log(`Starting round for room`, roomId);
+		console.log('rooms', socket.rooms);
+
+		io.to(`room-${roomId}`).clients((error, clients) => {
 			if (error) throw error;
 
 			console.log(clients);
@@ -59,6 +94,6 @@ io.on('connection', socket => {
 
 	socket.on('disconnect', reason => {
 		console.log(`Client ${socket.id} disconnected:`, reason);
-		emitNumClients();
+		// emitNumClients();
 	});
 });

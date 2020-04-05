@@ -7,14 +7,32 @@
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
     <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 
 <body>
-    <h1>Chameleon</h1>
+    <div id="app">
+        <div v-if="!roomId">
+            <button @click="newRoom">Start a new room</button>
+            <form @submit.prevent="joinRoom">
+                Room ID:
+                <input type="text" v-model="roomIdInput" placeholder="abcdef" />
+                <button type="submit">Join a room</button>
+            </form>
+        </div>
 
-    <p>Your secret is: <strong id="secret">&mdash;</strong></p>
+        <div v-else>
+            <h1>Chameleon</h1>
+            <p>
+                Room ID: {{ roomId }}
+                <button @click="leaveRoom">Leave room</button>
+            </p>
 
-    <button id="new-round">New round with <span id="num-players">0</span> players</button>
+            <p>Your secret is: <strong>{{ secret || '—' }}</strong></p>
+
+            <button @click="newRound">New round with {{ numPlayers }} players</button>
+        </div>
+    </div>
 </body>
 <script src='client.js'></script>
 </html>
